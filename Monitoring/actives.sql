@@ -40,3 +40,4 @@ from gv$session   where status ='ACTIVE' and username is not null order by usern
 /
 
 
+
