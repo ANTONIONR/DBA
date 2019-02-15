@@ -45,3 +45,4 @@ from gv$session s, gv$sql q
    order by username   
 /
 
+
