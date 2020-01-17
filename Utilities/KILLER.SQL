@@ -210,17 +210,31 @@ declare
     DBMS_OUTPUT.PUT_LINE ('No SID, USER or SQLID match with parameter 1 !!! ');  	
   	Show_Help;    
   END;
-  
+
+
+  /* Return in number the Release of rdbms */ 
+  FUNCTION GET_RDBMS_VERSION RETURN NUMBER IS 
+    RDBMS  NUMBER (2);
+  BEGIN
+    SELECT TO_NUMBER(NVL(SUBSTR(version, 0, INSTR(version, '.')-1), version)) INTO RDBMS FROM V$INSTANCE;  
+    RETURN (RDBMS);
+  END;
+
      
   -- Generate the script for Disconnect 
   PROCEDURE Generate_Disconnect (DSID IN NUMBER, DSERIAL IN NUMBER, DINSTANCE IN NUMBER DEFAULT 0) IS
   BEGIN
-    IF DINSTANCE = 0 THEN   -- Is stand-alone
+    IF DINSTANCE = 0 THEN   -- Is stand-alonge
        DBMS_OUTPUT.PUT_LINE ('ALTER SYSTEM DISCONNECT SESSION ''' || DSID || ',' || DSERIAL || ''' IMMEDIATE;');
     ELSE  -- IS RAC, NEED INSTANCE ID
-       DBMS_OUTPUT.PUT_LINE ('ALTER SYSTEM DISCONNECT SESSION ''' || DSID || ',' || DSERIAL || ',' || DINSTANCE || ''' IMMEDIATE;');
+        IF GET_RDBMS_VERSION  <= 12 THEN  -- Disconnect in RAC is support from 18 on forwards
+           DBMS_OUTPUT.PUT_LINE ('ALTER SYSTEM DISCONNECT SESSION ''' || DSID || ',' || DSERIAL || ''' IMMEDIATE;');
+        ELSE    
+           DBMS_OUTPUT.PUT_LINE ('ALTER SYSTEM DISCONNECT SESSION ''' || DSID || ',' || DSERIAL || ',' || DINSTANCE || ''' IMMEDIATE;');
+        END IF;
     END IF; 
   END;
+    
 
   -- Generate the script for Kill 
   PROCEDURE Generate_Kill (DSID IN NUMBER, DSERIAL IN NUMBER, DINSTANCE IN NUMBER DEFAULT 0) IS
